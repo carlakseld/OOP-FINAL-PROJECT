@@ -1,3 +1,7 @@
+package brgydocumentrequest.persistence;
+
+import brgydocumentrequest.model.*;
+
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.PreparedStatement;
@@ -13,7 +17,7 @@ public class RequestStorage {
 
    // Database file location
     private static final String DB_FILE =
-           "C:/Users/Aksel Dellomas/IdeaProjects/OOP FINAL PROJECT GROUP D/barangay.db";
+           "C:/Users/Aksel Dellomas/IdeaProjects/BrgyDocumentRequestSystem/barangay.db";
 
     // SQLite connection URL
     private static final String DB_URL = "jdbc:sqlite:" + DB_FILE;
@@ -28,7 +32,7 @@ public class RequestStorage {
         return DriverManager.getConnection(DB_URL);
     }
 
-    // Builds a Resident from the 5 shared columns of any table
+    // Builds a brgydocumentrequest.model.Resident from the 5 shared columns of any table
     private Resident readResident(ResultSet rs) throws SQLException {
         return new Resident(
                 rs.getString("full_name"),
@@ -251,7 +255,7 @@ public class RequestStorage {
         }
     }
 
-    //  DELETE=
+    //  DELETE
 
     // Deletes ONE saved request by ID
     public void deleteRequest(String requestId) {

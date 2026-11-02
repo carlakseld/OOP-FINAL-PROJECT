@@ -1,3 +1,5 @@
+package brgydocumentrequest.model;
+
 import java.time.LocalDate;
 
 public class Indigency extends DocumentRequest {
@@ -6,7 +8,7 @@ public class Indigency extends DocumentRequest {
     private String reason;
     private String supportingDocument;
 
-    // Constructor para sa bagong Indigency Record
+    // Constructor para sa Indigency Record
     public Indigency(Resident resident, double monthlyIncome, String reason, String supportingDocument) {
         super(resident);
         setMonthlyIncome(monthlyIncome);

@@ -1,3 +1,5 @@
+package brgydocumentrequest.model;
+
 import java.time.LocalDate;
 import java.util.List;
 
@@ -9,7 +11,7 @@ public class CourtRental extends BrgyRental {
     private int startHour;      // Halimbawa: 8 (8 AM) hanggang 21 (9 PM)
     private int durationHours;  // Bilang ng oras para sa hourly rental
 
-    // Constructor para sa Bagong Court Rental
+    // Constructor para sa NEW REQ
     public CourtRental(Resident resident, LocalDate rentalDate, boolean isWholeDay, int startHour, int durationHours) {
         super(resident, rentalDate);
         this.isWholeDay = isWholeDay;
@@ -18,7 +20,7 @@ public class CourtRental extends BrgyRental {
         }
     }
 
-    // Constructor para sa Nilo-load na Court Rental
+    // Constructor para sa DATABASE
     public CourtRental(String rentalId, Resident resident, LocalDate rentalDate, boolean isWholeDay, int startHour, int durationHours) {
         super(rentalId, resident, rentalDate);
         this.isWholeDay = isWholeDay;
@@ -74,12 +76,12 @@ public class CourtRental extends BrgyRental {
             if (rental instanceof CourtRental && rental.getRentalDate().equals(this.getRentalDate())) {
                 CourtRental existing = (CourtRental) rental;
 
-                // Kung ang existing o ang bagong hiling ay Whole Day, magkakabanggaan agad
+                // clash if the planned schedule is already exist
                 if (existing.isWholeDay || this.isWholeDay) {
                     return false;
                 }
 
-                // Kung parehong Hourly, suriin ang oras (Time Slot Overlap Check)
+                //Time Slot Overlap Check
                 int existingEnd = existing.startHour + existing.durationHours;
                 int thisEnd = this.startHour + this.durationHours;
 

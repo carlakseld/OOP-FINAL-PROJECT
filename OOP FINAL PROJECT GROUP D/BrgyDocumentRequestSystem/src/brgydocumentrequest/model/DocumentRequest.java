@@ -1,3 +1,5 @@
+package brgydocumentrequest.model;
+
 import java.time.LocalDate;
 
 public abstract class DocumentRequest {
@@ -7,7 +9,7 @@ public abstract class DocumentRequest {
     private Resident resident;
     private LocalDate dateRequested;
 
-    // Constructor for a NEW request: auto ID, date set to today
+    // Constructor for a NEW request:
     public DocumentRequest(Resident resident) {
         // Reject a missing resident
         if (resident == null) {

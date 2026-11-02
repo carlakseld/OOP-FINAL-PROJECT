@@ -1,3 +1,5 @@
+package brgydocumentrequest.model;
+
 import java.time.LocalDate;
 import java.util.List;
 
@@ -8,7 +10,7 @@ public class TentRental extends BrgyRental {
     private int quantity;
     private int numberOfDays;
 
-    // Constructor para sa Bagong Tent Rental
+    // Constructor para sa Rent req
     public TentRental(Resident resident, LocalDate rentalDate, int quantity, int numberOfDays) {
         super(resident, rentalDate);
         setQuantity(quantity);

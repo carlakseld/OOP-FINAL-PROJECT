@@ -1,3 +1,5 @@
+package brgydocumentrequest.model;
+
 import java.time.LocalDate;
 import java.util.List;
 
@@ -7,7 +9,7 @@ public abstract class BrgyRental implements Payable {
     private Resident resident;
     private LocalDate rentalDate;
 
-    // Constructor para sa bagong rental (New Request)
+    // Constructor para sa New Request
     public BrgyRental(Resident resident, LocalDate rentalDate) {
         setResident(resident);
         setRentalDate(rentalDate);

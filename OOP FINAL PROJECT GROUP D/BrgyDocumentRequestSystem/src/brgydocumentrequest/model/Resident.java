@@ -1,3 +1,5 @@
+package brgydocumentrequest.model;
+
 import java.time.LocalDate;
 
 public class Resident {
@@ -52,7 +54,7 @@ public class Resident {
         this.fullName = name;
     }
 
-    // Setter para sa Address: not blank, no '|'[cite: 36]
+    // Setter ADDRESS
     public void setAddress(String address) {
         if (address == null || address.trim().isEmpty()) {
             throw new IllegalArgumentException("Address cannot be blank.");
@@ -63,7 +65,7 @@ public class Resident {
         this.address = address.trim();
     }
 
-    // Setter para sa Contact Number: exactly 11 digits, starts with 09
+    // Setter CONTACT NO
     public void setContactNumber(String contactNumber) {
         if (contactNumber == null || !contactNumber.trim().matches("09\\d{9}")) {
             throw new IllegalArgumentException("Contact number must be 11 digits and start with 09.");
@@ -71,7 +73,7 @@ public class Resident {
         this.contactNumber = contactNumber.trim();
     }
 
-    // Setter para sa Gender: Validated (Male, Female, Other)
+    // Setter GENDER
     public void setGender(String gender) {
         if (gender == null || gender.trim().isEmpty()) {
             throw new IllegalArgumentException("Gender cannot be blank.");
@@ -83,7 +85,7 @@ public class Resident {
         this.gender = g;
     }
 
-    // Setter para sa Year of Birth: Kailangan valid na taon (Not future or Too old (1900))
+    // Setter  YEAR OF BIRTH
     public void setYearOfBirth(int yearOfBirth) {
         int currentYear = LocalDate.now().getYear();
         if (yearOfBirth < 1900 || yearOfBirth > currentYear) {

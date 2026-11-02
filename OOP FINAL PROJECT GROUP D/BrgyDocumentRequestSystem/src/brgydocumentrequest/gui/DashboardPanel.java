@@ -1,3 +1,8 @@
+package brgydocumentrequest.gui;
+
+import brgydocumentrequest.model.*;
+import brgydocumentrequest.persistence.RequestManager;
+
 import javax.swing.*;
 import javax.swing.table.DefaultTableModel;
 import java.awt.*;
@@ -110,7 +115,6 @@ public class DashboardPanel extends JPanel {
         countLabel.setText("Records: " + model.getRowCount());
     }
 
-    // Small helpers so the same message boxes are not typed again and again
     private void showError(Component parent, String message) {
         JOptionPane.showMessageDialog(parent, message, "Error", JOptionPane.ERROR_MESSAGE);
     }
@@ -119,14 +123,14 @@ public class DashboardPanel extends JPanel {
         JOptionPane.showMessageDialog(parent, message, "Database Error", JOptionPane.ERROR_MESSAGE);
     }
 
-    // Overwrites every cell of one table row (used by the Update buttons)
+    // FOR UPDATE
     private void replaceRow(DefaultTableModel model, int row, Object[] values) {
         for (int col = 0; col < values.length; col++) {
             model.setValueAt(values[col], row, col);
         }
     }
 
-    // ================= TABLE ROW BUILDERS (used when loading AND when adding/updating) =================
+    //  TABLE row for add and update
 
     private Object[] residencyRow(Residency x) {
         return new Object[]{
@@ -245,17 +249,21 @@ public class DashboardPanel extends JPanel {
         panel.setBorder(BorderFactory.createEmptyBorder(15, 15, 15, 15));
         panel.setBackground(new Color(245, 247, 250));
 
-        String[] columnNames = {"Request ID", "Full Name", "Address", "Contact Number", "Gender", "Year of Birth", "Date Requested", "Years", "Months", "Fee"};
+        String[] columnNames = {
+                "Request ID", "Full Name", "Address", "Contact Number",
+                "Gender", "Year of Birth", "Date Requested",
+                "Years", "Months", "Purpose", "Fee"
+        };
+
         DefaultTableModel tableModel = new DefaultTableModel(columnNames, 0) {
             public boolean isCellEditable(int row, int column) {
                 return false;
             }
         };
 
-        // Requests, same order as the table rows (keeps the original ID and date when updating)
         List<Residency> requestList = new ArrayList<>();
 
-        // LOAD the saved Residency records from the database
+        // LOAD SAVED REQUESTS
         for (DocumentRequest r : manager.getAll()) {
             if (r instanceof Residency) {
                 Residency x = (Residency) r;
@@ -263,10 +271,12 @@ public class DashboardPanel extends JPanel {
                 tableModel.addRow(residencyRow(x));
             }
         }
+
         updateDashboardCount(residencyCountLabel, tableModel);
 
         JTable table = new JTable(tableModel);
         table.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
+
         JScrollPane scrollPane = new JScrollPane(table);
         panel.add(scrollPane, BorderLayout.CENTER);
 
@@ -274,44 +284,102 @@ public class DashboardPanel extends JPanel {
         JPanel formPanel = new JPanel(new GridBagLayout());
         formPanel.setBorder(BorderFactory.createTitledBorder("Residency Certificate Request"));
         formPanel.setBackground(Color.WHITE);
+
         GridBagConstraints gbc = new GridBagConstraints();
         gbc.insets = new Insets(5, 5, 5, 5);
         gbc.fill = GridBagConstraints.HORIZONTAL;
 
-        // NOTE: the request date is set automatically (today) by DocumentRequest, so there is no date field here
         JTextField txtFullName = new JTextField(12);
         JTextField txtAddress = new JTextField(12);
-        JTextField txtContactNumber = new JTextField("", 12);
-        JComboBox<String> cmbGender = new JComboBox<>(new String[]{"Male", "Female", "Other"});
-        JTextField txtYearOfBirth = new JTextField("", 12);
-        JSpinner spnYears = new JSpinner(new SpinnerNumberModel(1, 0, 50, 1));
-        JSpinner spnMonths = new JSpinner(new SpinnerNumberModel(0, 0, 11, 1));
+        JTextField txtContactNumber = new JTextField(12);
 
-        gbc.gridx = 0; gbc.gridy = 0; formPanel.add(new JLabel("Full Name: "), gbc);
-        gbc.gridx = 1; formPanel.add(txtFullName, gbc);
-        gbc.gridx = 2; gbc.gridy = 0; formPanel.add(new JLabel("Address: "), gbc);
-        gbc.gridx = 3; formPanel.add(txtAddress, gbc);
+        JComboBox<String> cmbGender = new JComboBox<>(
+                new String[]{"Male", "Female", "Other"}
+        );
 
-        gbc.gridx = 0; gbc.gridy = 1; formPanel.add(new JLabel("Contact Number: "), gbc);
-        gbc.gridx = 1; formPanel.add(txtContactNumber, gbc);
-        gbc.gridx = 2; gbc.gridy = 1; formPanel.add(new JLabel("Gender: "), gbc);
-        gbc.gridx = 3; formPanel.add(cmbGender, gbc);
+        JTextField txtYearOfBirth = new JTextField(12);
 
-        gbc.gridx = 0; gbc.gridy = 2; formPanel.add(new JLabel("Year of Birth: "), gbc);
-        gbc.gridx = 1; formPanel.add(txtYearOfBirth, gbc);
+        JSpinner spnYears = new JSpinner(
+                new SpinnerNumberModel(1, 0, 50, 1)
+        );
 
-        gbc.gridx = 0; gbc.gridy = 3; formPanel.add(new JLabel("Years of Residency: "), gbc);
-        gbc.gridx = 1; formPanel.add(spnYears, gbc);
-        gbc.gridx = 2; gbc.gridy = 3; formPanel.add(new JLabel("Months of Residency (0-11): "), gbc);
-        gbc.gridx = 3; formPanel.add(spnMonths, gbc);
+        JSpinner spnMonths = new JSpinner(
+                new SpinnerNumberModel(0, 0, 11, 1)
+        );
+
+        // PURPOSE COMBOBOX
+        String[] purposes = {
+                "Employment",
+                "School Requirement",
+                "Business Requirement",
+                "Government Transaction",
+                "Personal Use",
+                "Others"
+        };
+
+        JComboBox<String> cmbPurpose = new JComboBox<>(purposes);
+
+        gbc.gridx = 0;
+        gbc.gridy = 0;
+        formPanel.add(new JLabel("Full Name:"), gbc);
+
+        gbc.gridx = 1;
+        formPanel.add(txtFullName, gbc);
+
+        gbc.gridx = 2;
+        formPanel.add(new JLabel("Address:"), gbc);
+
+        gbc.gridx = 3;
+        formPanel.add(txtAddress, gbc);
+
+        gbc.gridx = 0;
+        gbc.gridy = 1;
+        formPanel.add(new JLabel("Contact Number:"), gbc);
+
+        gbc.gridx = 1;
+        formPanel.add(txtContactNumber, gbc);
+
+        gbc.gridx = 2;
+        formPanel.add(new JLabel("Gender:"), gbc);
+
+        gbc.gridx = 3;
+        formPanel.add(cmbGender, gbc);
+
+        gbc.gridx = 0;
+        gbc.gridy = 2;
+        formPanel.add(new JLabel("Year of Birth:"), gbc);
+
+        gbc.gridx = 1;
+        formPanel.add(txtYearOfBirth, gbc);
+
+        gbc.gridx = 2;
+        formPanel.add(new JLabel("Purpose:"), gbc);
+
+        gbc.gridx = 3;
+        formPanel.add(cmbPurpose, gbc);
+
+        gbc.gridx = 0;
+        gbc.gridy = 3;
+        formPanel.add(new JLabel("Years of Residency:"), gbc);
+
+        gbc.gridx = 1;
+        formPanel.add(spnYears, gbc);
+
+        gbc.gridx = 2;
+        formPanel.add(new JLabel("Months of Residency:"), gbc);
+
+        gbc.gridx = 3;
+        formPanel.add(spnMonths, gbc);
 
         // ACTION BUTTONS
         JPanel buttonPanel = new JPanel(new FlowLayout(FlowLayout.LEFT));
         buttonPanel.setBackground(Color.WHITE);
+
         JButton btnAdd = new JButton("Submit");
         JButton btnUpdate = new JButton("Update");
         JButton btnDelete = new JButton("Delete");
         JButton btnClear = new JButton("Clear Form");
+
         buttonPanel.add(btnAdd);
         buttonPanel.add(btnUpdate);
         buttonPanel.add(btnDelete);
@@ -320,47 +388,63 @@ public class DashboardPanel extends JPanel {
         gbc.gridx = 0;
         gbc.gridy = 4;
         gbc.gridwidth = 4;
+
         formPanel.add(buttonPanel, gbc);
 
         panel.add(formPanel, BorderLayout.SOUTH);
 
-        // LISTENERS
+        // TABLE SELECTION
         table.getSelectionModel().addListSelectionListener(e -> {
             int row = table.getSelectedRow();
+
             if (!e.getValueIsAdjusting() && row != -1) {
                 txtFullName.setText(tableModel.getValueAt(row, 1).toString());
                 txtAddress.setText(tableModel.getValueAt(row, 2).toString());
                 txtContactNumber.setText(tableModel.getValueAt(row, 3).toString());
                 cmbGender.setSelectedItem(tableModel.getValueAt(row, 4).toString());
                 txtYearOfBirth.setText(tableModel.getValueAt(row, 5).toString());
+
                 spnYears.setValue(Integer.parseInt(tableModel.getValueAt(row, 7).toString()));
                 spnMonths.setValue(Integer.parseInt(tableModel.getValueAt(row, 8).toString()));
+                cmbPurpose.setSelectedItem(tableModel.getValueAt(row, 9).toString());
             }
         });
 
-        //CREATE ACTION
+        // CREATE ACTION
         btnAdd.addActionListener(e -> {
             try {
                 String name = txtFullName.getText().trim();
                 String address = txtAddress.getText().trim();
                 String contactNumber = txtContactNumber.getText().trim();
                 String gender = (String) cmbGender.getSelectedItem();
+
                 int yearOfBirth = Integer.parseInt(txtYearOfBirth.getText().trim());
+
                 int years = (Integer) spnYears.getValue();
                 int months = (Integer) spnMonths.getValue();
 
-                Resident resident = new Resident(name, address, contactNumber, gender, yearOfBirth);
+                String purpose = (String) cmbPurpose.getSelectedItem();
+
+                Resident resident = new Resident(
+                        name, address, contactNumber, gender, yearOfBirth
+                );
+
                 Residency residency = new Residency(resident, years, months);
 
-                // Validate + SAVE TO DATABASE (throws if something is wrong, so nothing below runs)
                 manager.addRequest(residency);
 
                 requestList.add(residency);
                 tableModel.addRow(residencyRow(residency));
+
                 updateDashboardCount(residencyCountLabel, tableModel);
-                JOptionPane.showMessageDialog(panel, "Residency Request Created Successfully!");
+
+                JOptionPane.showMessageDialog(
+                        panel,
+                        "Residency Request Created Successfully!"
+                );
+
             } catch (NumberFormatException ex) {
-                showError(panel, "Year of birth must be a valid whole number");
+                showError(panel, "Year of birth must be a valid whole number.");
             } catch (IllegalArgumentException ex) {
                 showError(panel, ex.getMessage());
             } catch (IllegalStateException ex) {
@@ -368,35 +452,59 @@ public class DashboardPanel extends JPanel {
             }
         });
 
+        // UPDATE ACTION
         btnUpdate.addActionListener(e -> {
             int row = table.getSelectedRow();
+
             if (row == -1) {
-                JOptionPane.showMessageDialog(panel, "Please select a request to update.", "Warning", JOptionPane.WARNING_MESSAGE);
+                JOptionPane.showMessageDialog(
+                        panel,
+                        "Please select a request to update.",
+                        "Warning",
+                        JOptionPane.WARNING_MESSAGE
+                );
                 return;
             }
+
             try {
                 Residency old = requestList.get(row);
+
                 String name = txtFullName.getText().trim();
                 String address = txtAddress.getText().trim();
                 String contactNumber = txtContactNumber.getText().trim();
                 String gender = (String) cmbGender.getSelectedItem();
+
                 int yearOfBirth = Integer.parseInt(txtYearOfBirth.getText().trim());
+
                 int years = (Integer) spnYears.getValue();
                 int months = (Integer) spnMonths.getValue();
 
-                Resident resident = new Resident(name, address, contactNumber, gender, yearOfBirth);
+                String purpose = (String) cmbPurpose.getSelectedItem();
 
-                // Database constructor: keeps the original ID and date requested
-                Residency updated = new Residency(resident, old.getRequestId(), old.getDateRequested(), years, months);
+                Resident resident = new Resident(
+                        name, address, contactNumber, gender, yearOfBirth
+                );
 
-                // UPDATE IN DATABASE (the manager also checks eligibility and that ID/type/date did not change)
+                Residency updated = new Residency(
+                        resident,
+                        old.getRequestId(),
+                        old.getDateRequested(),
+                        years,
+                        months
+                );
+
                 manager.updateRequest(updated);
 
                 requestList.set(row, updated);
                 replaceRow(tableModel, row, residencyRow(updated));
-                JOptionPane.showMessageDialog(panel, "Residency Request Updated Successfully!");
+
+                JOptionPane.showMessageDialog(
+                        panel,
+                        "Residency Request Updated Successfully!"
+                );
+
             } catch (NumberFormatException ex) {
-                showError(panel, "Year of birth must be a valid whole number");
+                showError(panel, "Year of birth must be a valid whole number.");
             } catch (IllegalArgumentException ex) {
                 showError(panel, ex.getMessage());
             } catch (IllegalStateException ex) {
@@ -404,22 +512,40 @@ public class DashboardPanel extends JPanel {
             }
         });
 
+        // DELETE ACTION
         btnDelete.addActionListener(e -> {
             int row = table.getSelectedRow();
+
             if (row == -1) {
-                JOptionPane.showMessageDialog(panel, "Please select a request to delete.", "Warning", JOptionPane.WARNING_MESSAGE);
+                JOptionPane.showMessageDialog(
+                        panel,
+                        "Please select a request to delete.",
+                        "Warning",
+                        JOptionPane.WARNING_MESSAGE
+                );
                 return;
             }
-            int confirm = JOptionPane.showConfirmDialog(panel, "Are you sure you want to delete this record?", "Confirm Deletion", JOptionPane.YES_NO_OPTION);
+
+            int confirm = JOptionPane.showConfirmDialog(
+                    panel,
+                    "Are you sure you want to delete this record?",
+                    "Confirm Deletion",
+                    JOptionPane.YES_NO_OPTION
+            );
+
             if (confirm == JOptionPane.YES_OPTION) {
                 try {
-                    // DELETE FROM DATABASE (ID is in column 0)
-                    manager.deleteRequest(tableModel.getValueAt(row, 0).toString());
+                    manager.deleteRequest(
+                            tableModel.getValueAt(row, 0).toString()
+                    );
 
                     requestList.remove(row);
                     tableModel.removeRow(row);
+
                     updateDashboardCount(residencyCountLabel, tableModel);
+
                     JOptionPane.showMessageDialog(panel, "Request Deleted.");
+
                 } catch (IllegalArgumentException ex) {
                     showError(panel, ex.getMessage());
                 } catch (IllegalStateException ex) {
@@ -435,8 +561,12 @@ public class DashboardPanel extends JPanel {
             txtContactNumber.setText("");
             cmbGender.setSelectedIndex(0);
             txtYearOfBirth.setText("");
+
             spnYears.setValue(1);
             spnMonths.setValue(0);
+
+            cmbPurpose.setSelectedIndex(0);
+
             table.clearSelection();
         });
 
@@ -459,7 +589,7 @@ public class DashboardPanel extends JPanel {
         // Requests, same order as the table rows (keeps the original ID and date when updating)
         List<Indigency> requestList = new ArrayList<>();
 
-        // LOAD the saved Indigency records from the database
+        // LOAD the saved brgydocumentrequest.model.Indigency records from the database
         for (DocumentRequest r : manager.getAll()) {
             if (r instanceof Indigency) {
                 Indigency x = (Indigency) r;
@@ -476,13 +606,13 @@ public class DashboardPanel extends JPanel {
 
         // INPUT FORM PANEL
         JPanel formPanel = new JPanel(new GridBagLayout());
-        formPanel.setBorder(BorderFactory.createTitledBorder("Certificate of Indigency Request"));
+        formPanel.setBorder(BorderFactory.createTitledBorder("Indigency Request"));
         formPanel.setBackground(Color.WHITE);
         GridBagConstraints gbc = new GridBagConstraints();
         gbc.insets = new Insets(5, 5, 5, 5);
         gbc.fill = GridBagConstraints.HORIZONTAL;
 
-        // NOTE: the request date is set automatically (today) by DocumentRequest, so there is no date field here
+        // NOTE: the request date is set automatically (today) by brgydocumentrequest.model.DocumentRequest, so there is no date field here
         JTextField txtFullName = new JTextField(12);
         JTextField txtAddress = new JTextField(12);
         JTextField txtContactNumber = new JTextField("", 12);
@@ -672,7 +802,7 @@ public class DashboardPanel extends JPanel {
         // Requests, same order as the table rows (keeps the original ID and date when updating)
         List<Clearance> requestList = new ArrayList<>();
 
-        // LOAD the saved Clearance records from the database
+        // LOAD the saved brgydocumentrequest.model.Clearance records from the database
         for (DocumentRequest r : manager.getAll()) {
             if (r instanceof Clearance) {
                 Clearance x = (Clearance) r;
@@ -695,7 +825,7 @@ public class DashboardPanel extends JPanel {
         gbc.insets = new Insets(5, 5, 5, 5);
         gbc.fill = GridBagConstraints.HORIZONTAL;
 
-        // NOTE: the request date is set automatically (today) by DocumentRequest, so there is no date field here
+        // NOTE: the request date is set automatically (today) by brgydocumentrequest.model.DocumentRequest, so there is no date field here
         JTextField txtFullName = new JTextField(12);
         JTextField txtAddress = new JTextField(12);
         JTextField txtContactNumber = new JTextField("", 12);

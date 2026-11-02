@@ -1,3 +1,5 @@
+package brgydocumentrequest.model;
+
 import java.time.LocalDate;
 
 public class Clearance extends DocumentRequest implements Payable {
@@ -49,7 +51,7 @@ public class Clearance extends DocumentRequest implements Payable {
 
     @Override
     public String getPaymentDisplay() {
-        return String.format("Barangay Clearance fee: PHP %.2f", FEE);
+        return String.format("₱%.2f", getFee());
     }
 
     // Summary for the staff record

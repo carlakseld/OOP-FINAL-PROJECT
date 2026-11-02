@@ -1,21 +1,20 @@
+package brgydocumentrequest.persistence;
+
+import brgydocumentrequest.model.BrgyRental;
+import brgydocumentrequest.model.CourtRental;
+import brgydocumentrequest.model.DocumentRequest;
+import brgydocumentrequest.model.TentRental;
+
 import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
 
-/**
- * RequestManager: keeps all records in memory and checks the rules.
- * Every change is saved to the database FIRST (through RequestStorage),
- * so a failed save never leaves a "ghost" record in memory.
- */
 public class RequestManager {
 
-    // Same stock as TentRental.TOTAL_STOCK (that constant is private there)
     private static final int TENT_STOCK = 30;
 
-    // All request records in memory (Residency, Indigency, Clearance)
+    // All request records in memory
     private final List<DocumentRequest> requests;
-
-    // All rental records in memory (Court and Tent together)
     private final List<BrgyRental> rentals;
 
     // Helper object that talks to the SQLite database
@@ -30,13 +29,12 @@ public class RequestManager {
 
     // Reads all saved records into memory and resets both ID counters
     public void loadAll() {
-        // Clear first so loading twice never duplicates records
         requests.clear();
         rentals.clear();
         requests.addAll(storage.loadRequests());
         rentals.addAll(storage.loadRentals());
 
-        // Highest request number (REQ-0007 -> 7)
+        // Highest request number para after mag run ng database ay hinde magugyulo yung ID Number Sequence
         int highestRequest = 0;
         for (DocumentRequest request : requests) {
             int number = Integer.parseInt(request.getRequestId().substring(4));
@@ -47,7 +45,7 @@ public class RequestManager {
         // Next new request continues after the highest saved one
         DocumentRequest.setNextId(highestRequest + 1);
 
-        // Highest rental number (RNT-0003 -> 3)
+        // Highest rental number
         int highestRental = 0;
         for (BrgyRental rental : rentals) {
             int number = Integer.parseInt(rental.getRentalId().substring(4));
@@ -102,14 +100,13 @@ public class RequestManager {
         requests.set(requests.indexOf(existing), updated);
     }
 
-    // Deletes a saved request for good
+    // Deletes a saved request
     public void deleteRequest(String id) {
         DocumentRequest existing = findById(id);
         storage.deleteRequest(existing.getRequestId());
         requests.remove(existing);
     }
 
-    // Finds one request by its ID (e.g., REQ-0001) or throws if not found
     public DocumentRequest findById(String id) {
         if (id == null || id.trim().isEmpty()) {
             throw new IllegalArgumentException("Request ID cannot be blank.");
@@ -123,7 +120,7 @@ public class RequestManager {
         throw new IllegalArgumentException("No request found with ID: " + cleanId);
     }
 
-    // ===================== RENTALS =====================
+    // RENTALS
 
     // Adds a new rental after its own booking rule says it is available
     public void addRental(BrgyRental rental) {
@@ -135,7 +132,7 @@ public class RequestManager {
                 throw new IllegalArgumentException("Duplicate rental ID: " + rental.getRentalId());
             }
         }
-        // Each rental type applies its own rule (court: time/whole-day clash; tent: 30-tent stock)
+        // Each rental type applies its own rule
         if (!rental.checkAvailability(rentals)) {
             throw new IllegalArgumentException(conflictMessage(rental));
         }
@@ -144,23 +141,24 @@ public class RequestManager {
         rentals.add(rental);
     }
 
-    // Replaces a saved rental with an edited one (same ID, same kind: court stays court, tent stays tent)
+    // Update Rental
     public void updateRental(BrgyRental updated) {
         if (updated == null) {
             throw new IllegalArgumentException("Rental cannot be null.");
         }
-        // The rental must already exist (findRentalById throws if it does not)
+        // The rental must already exist
         BrgyRental existing = findRentalById(updated.getRentalId());
-        // Compare the class (a court may switch Whole Day <-> Hourly, but never become a tent)
+
+        // Compare the class
         if (existing.getClass() != updated.getClass()) {
             throw new IllegalArgumentException("The type of a saved rental cannot be changed.");
         }
-        // A NEW date must be today or later (an unchanged old date is allowed)
+        // A NEW date must be today or later
         boolean dateChanged = !existing.getRentalDate().equals(updated.getRentalDate());
         if (dateChanged && updated.getRentalDate().isBefore(LocalDate.now())) {
             throw new IllegalArgumentException("Rental date must be today or a future date.");
         }
-        // Check against every OTHER rental, so the rental never clashes with its own old version
+        // Check against every OTHER rental
         List<BrgyRental> others = new ArrayList<>(rentals);
         others.remove(existing);
         if (!updated.checkAvailability(others)) {
@@ -171,14 +169,14 @@ public class RequestManager {
         rentals.set(rentals.indexOf(existing), updated);
     }
 
-    // Deletes a saved rental for good; its date/time and tents become free again
+    // Deletes a saved rental
     public void deleteRental(String id) {
         BrgyRental existing = findRentalById(id);
         storage.deleteRental(existing.getRentalId());
         rentals.remove(existing);
     }
 
-    // Finds one rental by its ID (e.g., RNT-0001) or throws if not found
+    // Finds one rental by its ID or throws if not found
     public BrgyRental findRentalById(String id) {
         if (id == null || id.trim().isEmpty()) {
             throw new IllegalArgumentException("Rental ID cannot be blank.");

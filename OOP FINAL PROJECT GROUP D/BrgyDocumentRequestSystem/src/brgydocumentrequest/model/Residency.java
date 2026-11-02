@@ -1,3 +1,5 @@
+package brgydocumentrequest.model;
+
 import java.time.LocalDate;
 
 public class Residency extends DocumentRequest implements Payable {
@@ -52,7 +54,7 @@ public class Residency extends DocumentRequest implements Payable {
         this.monthsOfResidency = monthsOfResidency;
     }
 
-    // Converts the years to months and adds the months (1 year 6 months = 18)
+    // Converts the years to months and adds the months
     public int getTotalMonths() {
         return (int) yearsOfResidency * 12 + monthsOfResidency;
     }
@@ -86,6 +88,6 @@ public class Residency extends DocumentRequest implements Payable {
 
     @Override
     public String getPaymentDisplay() {
-        return String.format("Certificate of Residency fee: PHP %.2f", FEE);
+        return String.format("₱%.2f", getFee());
     }
 }
